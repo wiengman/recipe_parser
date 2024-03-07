@@ -13,3 +13,4 @@ chrono = { version = "0.4", features = ["serde"] }
 scraper = "0.19"
 validator = { version = "0.17", features = ["derive"] }
 regex = "1.10.3"
+html-escape = "0.2"
