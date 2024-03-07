@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use regex::Regex;
 
 use crate::{
     date::Date, image::Image, keywords::Keywords, recipe_category::RecipeCategory,
@@ -38,9 +39,14 @@ impl Recipe {
         let json_selector =
             scraper::Selector::parse(r#"script[type="application/ld+json"]"#).unwrap();
         let mut raw = String::new();
-        for tag in document.select(&json_selector) {
-            let map: Value = serde_json::from_str(&tag.inner_html()).unwrap();
 
+        // Regex to remove stupid characters
+        
+        let re = Regex::new(r#"[\u0000-\u001F]"#).unwrap();
+        for tag in document.select(&json_selector) {
+            let schema_raw = tag.inner_html();
+            let schema_filtered = Regex::replace_all(&re, &schema_raw, "");
+            let map: Value = serde_json::from_str(&schema_filtered).unwrap();
             if map.is_array() {
                 if let Some(i) = map
                     .as_array()
@@ -54,7 +60,7 @@ impl Recipe {
                 }
             } else if map["@type"] == "Recipe" {
                 println!("{map:#?}");
-                raw = tag.inner_html();
+                raw = schema_filtered.to_string();
                 break;
             };
         }
